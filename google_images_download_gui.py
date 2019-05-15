@@ -11,7 +11,18 @@ def append_txt_to_array(txt_file):
     for x in f:
         word_list.append(x.rstrip("\n").lower())
         word_list = list(set(word_list))
-        word_list.sort()
+    f.close()
+    return word_list
+
+def append_txt_to_searchHistory():
+    word_list = []
+    f = open('history_keyword.txt',"r")
+    counter=1
+    for x in f:
+        if counter <=10:
+            word_list.append(x.rstrip("\n").lower())
+            word_list = list(set(word_list))
+            counter+=1
     f.close()
     return word_list
 
@@ -42,11 +53,12 @@ def mainMenu():
     global formatList
     global userRightList
     global languageList
+    global sizeList
     global inputOption
 
     mainMenu = Tk()
     mainMenu.title("Google Images Download")
-    mainMenu.geometry('500x300')
+    mainMenu.geometry('550x300')
     mainMenu.resizable(width=False, height=False)
     mainMenu.tk.call('tk', 'scaling', 1.5)
 
@@ -124,6 +136,18 @@ def mainMenu():
     varLanguageOption.set(0)
     checkBoxLanguageOption = Checkbutton(mainMenu,  text="On Parameter",variable= varLanguageOption,).grid(row=5,column=2)
 
+    #++++++row 5++++++ size
+    l_SizeOption = Label(mainMenu, text="Size: ").grid(row=6, column=0, pady=5, sticky=W)
+    defaultSizeOption = StringVar(mainMenu)
+    defaultSizeOption.set(sizeList[0])
+    om_SizeOption = OptionMenu(mainMenu, defaultSizeOption,*sizeList)
+    om_SizeOption.configure(width=20)
+    om_SizeOption.grid(row=6,column=1,pady=5,sticky=W)
+    #checkbox
+    varSizeOption = IntVar()
+    varSizeOption.set(0)
+    checkBoxSizeOption = Checkbutton(mainMenu,  text="On Parameter",variable= varSizeOption,).grid(row=6,column=2)
+
     def returnEntry():
         global Records
         global censored_word
@@ -138,9 +162,10 @@ def mainMenu():
                 entry = e_Keyword.get().lower()
                 print(entry)
                 validated = entry_validation(entry, censored_word)
-                keyword = entry
+                keywords = entry
+                print(keywords,"keyword here")
                 if validated == True:
-                    if keyword=="":
+                    if keywords=="":
                             messagebox.showinfo("WARNING!","Keyword must not be empty\nPlease enter something")
                             return
                     else:    
@@ -157,6 +182,8 @@ def mainMenu():
                         return
                 print(var_searchHistory) #debug
                 store_parameter_value_to_dictionary("keywords",var_searchHistory,Records)
+                print(keywords,':third keyword here')
+                
                 print(Records) #debug
 
             #Numbering parameter
@@ -178,15 +205,20 @@ def mainMenu():
             var_languageOption = defaultLanguageOption.get()
             print(var_languageOption)
             check_store(varLanguageOption,"language",var_languageOption,Records)
+            #Size parameter
+            var_sizeOption = defaultSizeOption.get()
+            print(var_sizeOption)
+            check_store(varSizeOption,"size",var_sizeOption,Records)
+            
             #download the image
             download_images(Records)
             messagebox.showinfo("NOTIFICATION","Download success")
             if var_inputOption == inputOption[0]:
                 print(keywords)
-                searchHistory.append(keyword)
-                print(searchHistory)
+                searchHistory.insert(0,keywords)
+                print(searchHistory,":this is search history list")
                 store_keyword_to_history(searchHistory)
-                searchHistory = append_txt_to_array("history_keyword.txt")
+                searchHistory = append_txt_to_searchHistory()
                 print(searchHistory)
                 om_SearchHistory = OptionMenu(mainMenu,defaultSearchHistoryValue,*searchHistory)
                 om_SearchHistory.grid(row=0,column=3)
@@ -194,14 +226,13 @@ def mainMenu():
             if file_is_empty==True:
                 defaultSearchHistoryValue.set(searchHistory[0])
                 l_Keyword = Label(mainMenu,text="Search History: ").grid(row=0,column=2,pady=5)
-                om_SearchHistory = OptionMenu(mainMenu,defaultSearchHistoryValue,*searchHistory)
-                om_SearchHistory.grid(row=0,column=3)
+            defaultSearchHistoryValue.set(searchHistory[0])
+            om_SearchHistory = OptionMenu(mainMenu,defaultSearchHistoryValue,*searchHistory)
+            om_SearchHistory.grid(row=0,column=3)
         except ValueError:
             messagebox.showinfo("WARNING!","There is some value entered not intended for it's field\nPlease check your input again")
     enterEntry = Button(mainMenu, text= "Enter", command=returnEntry,bg="yellow")
     enterEntry.grid(row=7,column=1,columnspan=2,sticky='nesw')
-        
-    mainMenu.mainloop()
 
 #Other functions
 def check_box_state(checkBoxVariable):
@@ -229,15 +260,18 @@ def check_empty_file(txt_file):
     if  os.stat(txt_file).st_size==0:
         return True
     return False
+
 #========GUI END=========#
 
 #----------------MAIN-----------------#
 Records = {}
 inputOption=[]
-searchHistory = append_txt_to_array("history_keyword.txt")
+searchHistory = append_txt_to_searchHistory()
+print(searchHistory)
 formatList = ["jpg", "gif", "png", "bmp", "svg", "webp", "ico", "raw"]
 userRightList =["labeled-for-reuse-with-modifications","labeled-for-reuse","labeled-for-noncommercial-reuse-with-modification","labeled-for-nocommercial-reuse"]
 languageList = ["Arabic", "Chinese (Simplified)", "Chinese (Traditional)", "Czech", "Danish", "Dutch", "English", "Estonian. Finnish", "French", "German", "Greek", "Hebrew", "Hungarian", "Icelandic", "Italian", "Japanese", "Korean", "Latvianm", "Lithuanian", "Norwegian", "Portuguese", "Polish", "Romanian", "Russian", "Spanish", "Swedish", "Turkish"]
+sizeList =["large", "medium", "icon", ">400*300", ">640*480", ">800*600", ">1024*768", ">2MP", ">4MP", ">6MP", ">8MP", ">10MP", ">12MP", ">15MP", ">20MP", ">40MP", ">70MP"]
 censored_word = append_txt_to_array("censored_list_of_words.txt")
 mainMenu()
 
